@@ -1,21 +1,49 @@
+const TelegramBot = require('node-telegram-bot-api');
+
 const Datastore = require('nedb'),
     db = new Datastore({
         filename: '/tmp/costs',
         autoload: true
     });
 
-const Telegraf = require('telegraf')
-const bot = new Telegraf('process.env.BOT_TOKEN')
+const token = '479710272:AAFvk7y9A6vLANbAd0sPevwd3cKlznS5gIg';
+const bot = new TelegramBot(token, {
+    polling: true
+});
 
-bot.start((ctx) => ctx.reply('Welcome!'))
-bot.command('/new_cost', (ctx) => {
-    const cost = {
-        message: ctx.message.text
-    }
-    db.insert(cost, function (err, newDoc) {
+bot.onText(/\/plancost (.+) (\d+)\s*(.*)/, (msg, match) => {
+    const chatId = msg.chat.id;
+    const plannedExpense = {
+        type: 'PLANNED_EXPENSE',
+        name: match[1],
+        value: match[2],
+        month: match[3]
+    };
+    db.insert(plannedExpense, function (err, newDoc) {
         if (err) {
-            console.error(err)
+            console.error(err);
         }
     });
-})
-bot.startPolling()
+    bot.sendMessage(chatId, JSON.stringify(plannedExpense));
+});
+
+bot.onText(/\/addcost (.+) (\d+)\s*(.*)/, (msg, match) => {
+    const chatId = msg.chat.id;
+    const expense = {
+        type: 'EXPENSE',
+        name: match[1],
+        value: match[2],
+        month: new Date()
+    };
+    db.insert(expense, function (err, newDoc) {
+        if (err) {
+            console.error(err);
+        }
+    });
+    bot.sendMessage(chatId, JSON.stringify(expense));
+});
+
+bot.on('message', (msg) => {
+    const chatId = msg.chat.id;
+    bot.sendMessage(chatId, 'Received your message');
+});
