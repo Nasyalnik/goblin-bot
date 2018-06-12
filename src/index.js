@@ -1,4 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
+const moment = require('moment');
+moment.locale('ru');
 
 const Statuses = {
     DEFAULT: 'DEFAULT',
@@ -33,7 +35,7 @@ bot.onText(/(.+) (\d+)\s*(.*)/, (msg, match) => {
             type: 'PLANNED_EXPENSE',
             name: match[1],
             value: match[2],
-            month: match[3]
+            month: moment().month(match[3]).format()
         };
         db.insert(plannedExpense, function (err, newDoc) {
             if (err) {
@@ -57,7 +59,7 @@ bot.onText(/(.+) (\d+)/, (msg, match) => {
             type: 'EXPENSE',
             name: match[1],
             value: match[2],
-            month: new Date()
+            month: moment().format()
         };
         db.insert(expense, function (err, newDoc) {
             if (err) {
