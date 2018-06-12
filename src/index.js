@@ -1,5 +1,15 @@
 const TelegramBot = require('node-telegram-bot-api');
 
+const Statuses = {
+    DEFAULT: 'DEFAULT',
+    WAITING_PLANNED_EXPENSE: 'WAITING_PLANNED_EXPENSE',
+    WAITING_EXPENSE: 'WAITING_EXPENSE'
+};
+
+const currentState = {
+    status: Statuses.DEFAULT
+};
+
 const Datastore = require('nedb'),
     db = new Datastore({
         filename: '/tmp/costs',
@@ -11,39 +21,50 @@ const bot = new TelegramBot(token, {
     polling: true
 });
 
-bot.onText(/\/plancost (.+) (\d+)\s*(.*)/, (msg, match) => {
+bot.onText(/\/plancost/, (msg, match) => {
     const chatId = msg.chat.id;
-    const plannedExpense = {
-        type: 'PLANNED_EXPENSE',
-        name: match[1],
-        value: match[2],
-        month: match[3]
-    };
-    db.insert(plannedExpense, function (err, newDoc) {
-        if (err) {
-            console.error(err);
-        }
-    });
-    bot.sendMessage(chatId, JSON.stringify(plannedExpense));
+    bot.sendMessage(chatId, 'Введите запланированные расходы');
+    currentState.status = Statuses.WAITING_PLANNED_EXPENSE;
+});
+bot.onText(/(.+) (\d+)\s*(.*)/, (msg, match) => {
+    const chatId = msg.chat.id;
+    if (currentState.status == Statuses.WAITING_PLANNED_EXPENSE) {
+        const plannedExpense = {
+            type: 'PLANNED_EXPENSE',
+            name: match[1],
+            value: match[2],
+            month: match[3]
+        };
+        db.insert(plannedExpense, function (err, newDoc) {
+            if (err) {
+                console.error(err);
+            }
+        });
+        currentState.status = 'DEFAULT';
+    }
 });
 
-bot.onText(/\/addcost (.+) (\d+)\s*(.*)/, (msg, match) => {
+bot.onText(/\/addcost/, (msg, match) => {
     const chatId = msg.chat.id;
-    const expense = {
-        type: 'EXPENSE',
-        name: match[1],
-        value: match[2],
-        month: new Date()
-    };
-    db.insert(expense, function (err, newDoc) {
-        if (err) {
-            console.error(err);
-        }
-    });
-    bot.sendMessage(chatId, JSON.stringify(expense));
+    bot.sendMessage(chatId, 'Введите текущие расходы');
+    currentState.status = Statuses.WAITING_EXPENSE;
 });
 
-bot.on('message', (msg) => {
+bot.onText(/(.+) (\d+)/, (msg, match) => {
     const chatId = msg.chat.id;
-    bot.sendMessage(chatId, 'Received your message');
+    if (currentState.status == Statuses.WAITING_EXPENSE) {
+        const expense = {
+            type: 'EXPENSE',
+            name: match[1],
+            value: match[2],
+            month: new Date()
+        };
+        db.insert(expense, function (err, newDoc) {
+            if (err) {
+                console.error(err);
+            }
+        });
+        currentState.status = 'DEFAULT';
+    }
+
 });
