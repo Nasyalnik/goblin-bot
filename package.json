@@ -1,20 +1,57 @@
 {
   "name": "goblin-bot",
-  "version": "1.0.0",
-  "scripts": {
-    "start": "nodemon src/index.js"
-  },
-  "main": "src/index.js",
-  "repository": "https://github.com/Nasyalnik/goblin-bot",
-  "author": "Aseeva-Nguen Nastya",
+  "version": "0.0.1",
+  "description": "API",
   "license": "MIT",
-  "devDependencies": {
-    "eslint": "^4.19.1",
-    "nodemon": "^1.17.5"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Nasyalnik/goblin-bot"
+  },
+  "author": "Aseeva-Nguen Nastya",
+  "scripts": {
+    "start": "node -r source-map-support/register dist/server.js",
+    "start:dev": "npm run build && npm run watch",
+    "build": "npm run build:ts && npm run lint:ts",
+    "build:ts": "tsc",
+    "lint:ts": "tslint -c tslint.json -p tsconfig.json",
+    "release": "standard-version",
+    "docker": "npm run clean && npm run build && docker build . -t \"api:$(git tag -l --points-at HEAD)\"",
+    "test": "jest --forceExit --coverage --verbose",
+    "watch:test": "npm run test -- --watchAll",
+    "watch": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch:ts\" \"npm run serve:debug\"",
+    "watch:ts": "tsc -w",
+    "serve:debug": "nodemon --inspect -r source-map-support/register dist/server.js",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@google-cloud/vision": "^0.22.1",
+    "config": "^2.0.1",
     "moment": "^2.22.2",
     "nedb": "^1.8.0",
-    "node-telegram-bot-api": "^0.30.0"
+    "node-telegram-bot-api": "^0.30.0",
+    "restify": "^7.2.1",
+    "source-map-support": "^0.5.9",
+    "vue": "^2.5.17"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.1.5",
+    "@types/config": "^0.0.34",
+    "@types/jest": "^23.3.2",
+    "@types/moment": "^2.13.0",
+    "@types/nedb": "^1.8.6",
+    "@types/node": "^9.4.6",
+    "@types/node-telegram-bot-api": "^0.30.3",
+    "@types/restify": "^7.2.4",
+    "@types/supertest": "^2.0.6",
+    "chai": "^4.1.2",
+    "concurrently": "^3.5.1",
+    "jest": "^22.0.4",
+    "nodemon": "^1.13.0",
+    "standard-version": "^4.4.0",
+    "supertest": "^3.0.0",
+    "ts-jest": "^22.0.4",
+    "ts-node": "^5.0.0",
+    "tslint": "^5.9.1",
+    "typescript": "^2.7.2"
   }
 }
